@@ -7,6 +7,12 @@ Any language with a TS Grammar can be supported and must be install/present for 
 
 Queries are mainly to find points of interest in code and might lead to false positives.
 
+## Demo
+
+**YouTube video by @GeekMasher:**
+
+[![SecuriTree](https://img.youtube.com/vi/PLHMmYLLhKo/0.jpg)](https://www.youtube.com/watch?v=PLHMmYLLhKo)
+
 ## Example
 
 ![example using Rust SQLx library](./assets/example-rust-sqlx.png)
