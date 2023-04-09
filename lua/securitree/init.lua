@@ -91,7 +91,7 @@ function M.create_alert(bufnr, ns, position, opts)
             end_row = end_line,
             end_col = end_col,
             hl_mode = "replace",
-            -- hl_group = "Alert",
+            hl_group = "Alert",
             virt_text_pos = "eol",
             virt_text = { { config.config.signs.alert } }
         }
