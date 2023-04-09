@@ -27,18 +27,17 @@ function M.load_queries(path)
                     queries[lang_name] = {}
                 end
 
-                -- Metadata files contain all the info about the query and is loaded into 
-                -- queries along with the path
-                local metadata_path = file:gsub(".scm", ".json")
+                -- Load markdown file (if present) and corresponding content 
+                local metadata_path = file:gsub(".scm", ".md")
                 local query = {
+                    -- name, severity, content
                     path = file
                 }
 
                 if utils.is_file(metadata_path) then
-                    local json_data = utils.read_json_file(metadata_path)
-                    if json_data ~= nil then
-                        query = utils.table_merge(query, json_data)
-                        print(query)
+                    local md_data = utils.load_markdown(metadata_path)
+                    if md_data ~= nil then
+                        query = utils.table_merge(query, md_data)
                     end
                 end
 
@@ -80,9 +79,10 @@ function M.create_alert(bufnr, ns, position, opts)
         end_lnum = end_line,
         col = start_col,
         end_col = end_col,
-        severity = vim.diagnostic.severity.ERROR,
-        message = opts['message'],
+        severity = utils.severity_to_diagnostic(opts.severity),
+        message = opts.message,
         source = "securitree",
+        user_data = opts.content,
     }
 
     vim.api.nvim_buf_set_extmark(
@@ -91,7 +91,7 @@ function M.create_alert(bufnr, ns, position, opts)
             end_row = end_line,
             end_col = end_col,
             hl_mode = "replace",
-            hl_group = "Alert",
+            -- hl_group = "Alert",
             virt_text_pos = "eol",
             virt_text = { { config.config.signs.alert } }
         }
@@ -122,7 +122,8 @@ function M.run_queries()
                     M.create_alert(
                         bufnr, ns, { node:range() },
                         {
-                            message = query_data['name']
+                            message = query_data['name'],
+                            severity = query_data['severity']
                         }
                     )
                 end
