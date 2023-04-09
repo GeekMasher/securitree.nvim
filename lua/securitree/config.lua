@@ -11,8 +11,9 @@ function M.setup(opts)
     local utils = require("securitree.utils")
     local defaults = {
         paths = {
-            -- TODO: is this the best path to use?
-            utils.join_path(vim.fn.stdpath("data"), "securitree", "queries")
+            vim.fs.normalize('~/.queries'),
+            -- .local/share/nvim/lazy/securitree.nvim
+            utils.join_path(vim.fn.stdpath("data"), "lazy", "securitree.nvim", "queries")
         },
         autocmd = true,
         signs = {
