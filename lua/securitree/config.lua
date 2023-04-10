@@ -3,6 +3,7 @@ local M = {}
 
 M.enabled = true
 M.alerts = {}
+M.alerts_lines = {}
 M.config = {}
 M.queries = {}
 

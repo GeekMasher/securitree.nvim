@@ -65,6 +65,7 @@ function M.clear_alerts(bufnr, ns)
     vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
     vim.diagnostic.reset(ns, bufnr)
     config.alerts = {}
+    config.alerts_lines = {}
 end
 
 function M.create_alert(bufnr, ns, position, opts)
@@ -72,6 +73,15 @@ function M.create_alert(bufnr, ns, position, opts)
     local start_col = position[2]
     local end_line = position[3]
     local end_col = position[4]
+
+    -- avoid duplications
+    for _, alert in ipairs(config.alerts_lines) do
+        local new_alert = opts.message .. ":" .. opts.start_line
+
+        if alert == new_alert then
+            return
+        end
+    end
 
     config.alerts[#config.alerts+1] = {
         bufnr = bufnr,
@@ -84,6 +94,8 @@ function M.create_alert(bufnr, ns, position, opts)
         source = "securitree",
         user_data = opts.content,
     }
+
+    config.alerts_lines[#config.alerts_lines+1] = opts.message .. ":" .. opts.start_line
 
     vim.api.nvim_buf_set_extmark(
         bufnr, ns, start_line, start_col,
@@ -119,9 +131,11 @@ function M.run_queries()
             for id, node in query:iter_captures(root, bufnr, 0, -1) do
                 local name = query.captures[id]
                 if name == "result" then
+                    local pos = { node:range() }
                     M.create_alert(
-                        bufnr, ns, { node:range() },
+                        bufnr, ns, pos,
                         {
+                            start_line = pos[1],
                             message = query_data['name'],
                             severity = query_data['severity']
                         }
