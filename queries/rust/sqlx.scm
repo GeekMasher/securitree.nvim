@@ -1,5 +1,5 @@
-;; Write your query here like `(node) @capture`,
-;; put the cursor under the capture to highlight the matches.
+;; sqlx::query
+;; sqlx::query_as
 (call_expression
   (generic_function
     (scoped_identifier
