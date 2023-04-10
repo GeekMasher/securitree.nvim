@@ -30,8 +30,9 @@ function M.load_queries(path)
                 -- Load markdown file (if present) and corresponding content 
                 local metadata_path = file:gsub(".scm", ".md")
                 local query = {
-                    -- name, severity, content
-                    path = file
+                    -- path, name, severity, content
+                    path = file,
+                    name = vim.fs.basename(file)
                 }
 
                 if utils.is_file(metadata_path) then
@@ -76,7 +77,7 @@ function M.create_alert(bufnr, ns, position, opts)
 
     -- avoid duplications
     for _, alert in ipairs(config.alerts_lines) do
-        local new_alert = opts.message .. ":" .. opts.start_line
+        local new_alert = opts.message .. ":" .. opts.start_line .. "#" .. opts.start_col
 
         if alert == new_alert then
             return
@@ -95,7 +96,7 @@ function M.create_alert(bufnr, ns, position, opts)
         user_data = opts.content,
     }
 
-    config.alerts_lines[#config.alerts_lines+1] = opts.message .. ":" .. opts.start_line
+    config.alerts_lines[#config.alerts_lines+1] = opts.message .. ":" .. opts.start_line .. "#" .. opts.start_col
 
     vim.api.nvim_buf_set_extmark(
         bufnr, ns, start_line, start_col,
@@ -136,6 +137,7 @@ function M.run_queries()
                         bufnr, ns, pos,
                         {
                             start_line = pos[1],
+                            start_col = pos[2],
                             message = query_data['name'],
                             severity = query_data['severity']
                         }
