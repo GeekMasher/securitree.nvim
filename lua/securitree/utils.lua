@@ -37,6 +37,14 @@ function M.table_merge(t1, t2)
   end
 end
 
+function M.get_language_seperator(lang)
+    if lang == "rust" then
+        return "::"
+    else
+        return "."
+    end
+end
+
 function M.severity_to_diagnostic(sev)
     -- https://neovim.io/doc/user/diagnostic.html
     if sev == "error" or sev == "critical" or sev == "high" then

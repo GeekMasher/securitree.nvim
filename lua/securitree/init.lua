@@ -6,6 +6,40 @@ local config = require("securitree.config")
 -- treesitter magic
 -- local ts_utils = require('nvim-treesitter.ts_utils')
 local ts_parsers = require('nvim-treesitter.parsers')
+-- local ts_query = require('nvim-treesitter.query')
+
+local vim_query = require('vim.treesitter.query')
+
+vim_query.add_predicate("check?", function(match, _, bufnr, pred, _)
+    local path = match[pred[2]]
+    local import = pred[3]
+    local module = pred[4]
+
+    -- both params must be present
+    if not path then
+        return false
+    end
+
+    local text = vim.treesitter.get_node_text(path, bufnr)
+    -- print(' => ' .. text)
+
+    -- Go over the imports and check if they match
+    local present = false
+    for imp, mod in pairs(config.context) do
+        -- print(' >> ' .. mod .. " -> " .. imp)
+        if imp == import and mod == module then
+            present = true
+        elseif module == nil and imp == import then
+            present = true
+        end
+    end
+
+    if present and text == import then
+        return true
+    end
+
+    return false
+end)
 
 local M = {}
 
@@ -42,6 +76,12 @@ function M.load_queries(path)
                     end
                 end
 
+                if string.match(file, 'locals.scm$') then
+                    query.skip = true
+                else
+                    query.skip = false
+                end
+
                 queries[lang_name][vim.fs.basename(file)] = query
             end
         end
@@ -55,9 +95,13 @@ function M.load_query(lang, path)
     local query_data = fhandle:read("*all")
     fhandle.close()
 
-    local query = vim.treesitter.parse_query(
-        lang, query_data
-    )
+    local query
+
+    if vim.version().minor >= 9 then
+        query = vim.treesitter.query.parse(lang, query_data)
+    elseif vim.version().minor <= 8 then
+        query = vim.treesitter.parse_query(lang, query_data)
+    end
     return query
 end
 
@@ -126,10 +170,37 @@ function M.run_queries()
 
         M.clear_alerts(bufnr, ns)
 
-        for query_name, query_data in pairs(language_queries) do
+        -- Run language locals query
+        local locals = language_queries['locals.scm']
+
+        if locals ~= nil then
+            config.context = {}
+
+            local locals_query = M.load_query(language, locals['path'])
+            local current = ""
+
+            for id, node, _ in locals_query:iter_captures(root, bufnr, 0, -1) do
+                local node_type = locals_query.captures[id]
+                if node_type == "module" then
+                    current = vim.treesitter.get_node_text(node, bufnr)
+                elseif node_type == "import" then
+                    local text = vim.treesitter.get_node_text(node, bufnr)
+                    config.context[text] = current
+                    current = "" -- reset
+                end
+            end
+            -- print(vim.inspect(config.context))
+        end
+
+        -- Run language queries
+        for _, query_data in pairs(language_queries) do
+            if query_data.skip == true then
+                ::continue::
+            end
             local query = M.load_query(language, query_data['path'])
 
-            for id, node in query:iter_captures(root, bufnr, 0, -1) do
+            -- https://neovim.io/doc/user/treesitter.html#Query%3Aiter_captures()
+            for id, node, _ in query:iter_captures(root, bufnr, 0, -1) do
                 local name = query.captures[id]
                 if name == "result" then
                     local pos = { node:range() }

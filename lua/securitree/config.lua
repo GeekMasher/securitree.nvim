@@ -6,6 +6,7 @@ M.alerts = {}
 M.alerts_lines = {}
 M.config = {}
 M.queries = {}
+M.context = {}
 
 
 function M.setup(opts)
