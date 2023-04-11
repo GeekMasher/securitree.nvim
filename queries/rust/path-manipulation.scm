@@ -2,7 +2,7 @@
 
 (call_expression 
   function: (identifier) @name
-  (#check? @name "canonicalize" "fs")
+  (#check? @name "canonicalize" "std::fs")
   
   (arguments [
     (reference_expression) @result     
