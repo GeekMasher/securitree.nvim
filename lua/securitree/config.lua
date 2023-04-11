@@ -12,15 +12,27 @@ M.context = {}
 function M.setup(opts)
     local utils = require("securitree.utils")
     local defaults = {
-        paths = {
-            vim.fs.normalize('~/.queries'),
-            -- .local/share/nvim/lazy/securitree.nvim
-            utils.join_path(vim.fn.stdpath("data"), "lazy", "securitree.nvim", "queries")
-        },
+        -- Auto loads and runs the plugin
         autocmd = true,
+        -- Default locations to load queris
+        paths_default = {
+            -- Home dir
+            vim.fs.normalize('~/.queries'),
+            -- Packer
+            utils.join_path(vim.fn.stdpath("data"), "packer", "securitree.nvim", "queries"),
+            -- Lazy
+            utils.join_path(vim.fn.stdpath("data"), "lazy", "securitree.nvim", "queries"),
+        },
+        -- Paths / Locations to load queries from
+        paths = {},
+        filters = {
+            -- Allow all queries by default
+            severity = "all"
+        },
         signs = {
+            -- Alert symbol
             alert = ""
-        }
+        },
     }
 
     M.config = utils.table_merge(defaults, opts)
