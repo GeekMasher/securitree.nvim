@@ -1,3 +1,6 @@
+
+testing*.scm
+
 # ---> Lua
 # Compiled Lua sources
 luac.out
