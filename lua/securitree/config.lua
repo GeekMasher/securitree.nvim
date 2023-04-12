@@ -14,6 +14,7 @@ function M.setup(opts)
     local defaults = {
         -- Auto loads and runs the plugin
         autocmd = true,
+        autocontext = false,
         -- Default locations to load queris
         paths_default = {
             -- Home dir

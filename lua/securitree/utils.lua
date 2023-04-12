@@ -40,6 +40,8 @@ end
 function M.get_language_seperator(lang)
     if lang == "rust" then
         return "::"
+    elseif lang == "javascript" then
+        return "->"
     else
         return "."
     end
