@@ -3,6 +3,7 @@ local utils = require("securitree.utils")
 local config = require("securitree.config")
 local alerts = require("securitree.alerts")
 local context = require("securitree.context")
+local windows = require("securitree.windows")
 
 -- treesitter magic
 -- local ts_utils = require('nvim-treesitter.ts_utils')
@@ -100,14 +101,18 @@ function M.run_queries()
                 M.load_query(language, locals['path']),
                 language
             )
+            if windows.current_panel then
+                context.show_context()
+            end
         end
 
         -- Run language queries
-        for _, query_data in pairs(language_queries) do
+        for name, query_data in pairs(language_queries) do
             if query_data.skip == true then
                 ::continue::
             end
             local query = M.load_query(language, query_data['path'])
+            -- print("Query Name :: " .. name)
 
             -- https://neovim.io/doc/user/treesitter.html#Query%3Aiter_captures()
             for id, node, _ in query:iter_captures(root, bufnr, 0, -1) do
@@ -129,6 +134,27 @@ function M.run_queries()
 
         -- https://neovim.io/doc/user/diagnostic.html#vim.diagnostic.set()
         vim.diagnostic.set(ns, bufnr, config.alerts)
+    end
+end
+
+function M.show_queries(persistent)
+    persistent = persistent or false
+    local language = ts_parsers.get_buf_lang()
+    local items = {}
+
+    local queries = config.queries[language]
+
+    if queries ~= nil then
+        for name in pairs(queries) do
+            local full_name = '- ' .. name
+            items[#items+1] = full_name
+        end
+
+        if not windows.current_panel then
+            windows.create_panel("Show Queries", items, {persistent = persistent})
+        else
+            windows.set_panel_data(items)
+        end
     end
 end
 
@@ -165,5 +191,31 @@ vim_query.add_predicate("check?", function(match, _, bufnr, pred, _)
 
     return false
 end)
+
+
+vim_query.add_predicate("imports?", function(match, _, bufnr, pred, _)
+    local path = match[pred[2]]
+    local module = pred[3]
+
+    -- both params must be present
+    if not path then
+        return false
+    end
+
+    local text = vim.treesitter.get_node_text(path, bufnr)
+    -- print(" >> " .. text .. " == " .. module)
+
+    -- Go over the imports and check if they match
+    local present = false
+    for imp, mod in pairs(config.context) do
+        -- print(' >> ' .. imp .. " <- " .. mod)
+        if mod == module and text == imp then
+            return true
+        end
+    end
+
+    return false
+end)
+
 
 return M
