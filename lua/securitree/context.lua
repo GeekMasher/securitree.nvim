@@ -33,15 +33,12 @@ function M.create_context(bufnr, root, locals_query, language)
     for id, node, _ in locals_query:iter_captures(root, bufnr, 0, -1) do
         local node_type = locals_query.captures[id]
         if node_type == "module" then
-
             current = vim.treesitter.get_node_text(node, bufnr)
-            print("module :: " .. current)
+            -- remove quotes
+            current = current:gsub("\"", ""):gsub("'", "")
             queue = queue + 1
         elseif node_type == "import" then
-
             local text = vim.treesitter.get_node_text(node, bufnr)
-            print("import :: " .. text)
-
             current_locals[text] = current
 
             if queue == 0 then
@@ -58,21 +55,15 @@ end
 
 function M.show_context(persistent)
     persistent = persistent or false
-    local language = ts_parsers.get_buf_lang()
+
     local items = {}
-    items[#items+1] = "[import] <= [module]"
-    items[#items+1] = ""
 
     for name, namespace in pairs(config.context) do
-        local full_name = '- ' .. name .. " <= " .. namespace
+        local full_name = '  - ' .. name .. " <= " .. namespace
         items[#items+1] = full_name
     end
 
-    if not windows.current_panel then
-        windows.create_panel("Show Context", items, {persistent = persistent})
-    else
-        windows.set_panel_data(items)
-    end
+    windows.panel_append_data(items)
 end
 
 --- Example
@@ -90,6 +81,7 @@ M.context_languages.javascript = function(bufnr, root, locals_query)
         local node_type = locals_query.captures[id]
         if node_type == "module" then
             local text = vim.treesitter.get_node_text(node, bufnr)
+            text = text:gsub("\"", ""):gsub("'", "")
             local last = table.remove(stack, #stack)
             results[last] = text
 
@@ -101,6 +93,8 @@ M.context_languages.javascript = function(bufnr, root, locals_query)
     end
     return results
 end
+-- Lua Context follows the same as JS
+M.context_languages.lua = M.context_languages.javascript
 
 return M
 

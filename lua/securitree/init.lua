@@ -13,6 +13,14 @@ local M = {}
 function M.setup(opts)
     config.setup(opts or {})
 
+    if config.config.autopanel then
+        windows.create_panel(
+            "SecuriTree",
+            { "Welcome to SecuriTree!", "" },
+            { persistent = true }
+        )
+    end
+
     -- Get list of defaults + provided paths
     local paths = utils.table_merge(config.config.paths_default, config.config.paths)
     for _, path in ipairs(paths) do
@@ -35,18 +43,13 @@ function M.setup(opts)
     -- Create User Command 
     vim.api.nvim_create_user_command("SecuriTree", function ()
         config.enabled = true
-        queries.show_queries()
         queries.run_queries()
     end, {})
 
     -- Show Context
-    vim.api.nvim_create_user_command("SecuriTreeContext", function()
-        context.show_context()
+    vim.api.nvim_create_user_command("SecuriTreePanel", function()
+        windows.create_panel("SecuriTree", {}, {})
     end, {})
-    -- Show context window, always
-    if config.config.autocontext then
-        context.show_context(true)
-    end
     -- Toggle
     vim.api.nvim_create_user_command("SecuriTreeToggle", function ()
         -- clear the augroup

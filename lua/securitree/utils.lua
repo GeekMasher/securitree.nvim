@@ -37,6 +37,13 @@ function M.table_merge(t1, t2)
   end
 end
 
+function M.table_extend(t1, t2)
+    for i=1,#t2 do
+        t1[#t1+1] = t2[i]
+    end
+    return t1
+end
+
 function M.get_language_seperator(lang)
     if lang == "rust" then
         return "::"

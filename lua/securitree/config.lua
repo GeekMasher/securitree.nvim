@@ -14,7 +14,8 @@ function M.setup(opts)
     local defaults = {
         -- Auto loads and runs the plugin
         autocmd = true,
-        autocontext = false,
+        autopanel = false,
+        debug = false,
         -- Default locations to load queris
         paths_default = {
             -- Home dir
@@ -26,6 +27,9 @@ function M.setup(opts)
         },
         -- Paths / Locations to load queries from
         paths = {},
+        language_mappings = {
+            typescript = "javascript"
+        },
         filters = {
             -- Allow all queries by default
             severity = "all"

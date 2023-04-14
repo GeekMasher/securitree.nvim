@@ -77,13 +77,23 @@ function M.load_query(lang, path)
     return query
 end
 
+--- Run Queries
 function M.run_queries()
     -- local file_path = vim.fn.expand('%')
-    local language = ts_parsers.get_buf_lang()
-    local language_queries = config.queries[language]
+    local language = M.get_language()
+    local language_queries = M.get_language_queries()
 
     local ns = vim.api.nvim_create_namespace("securitree")
     vim.api.nvim_set_hl(0, "Alert", {fg = "#ff0000"})
+
+    if windows.panel ~= nil then
+        -- clear
+        windows.clear_panel()
+    end
+
+    windows.panel_append_data({
+        "Loading Language :: " .. language, ""
+    })
 
     -- we check to make sure we have at least one query for the loaded language
     if language_queries ~= nil then
@@ -101,10 +111,15 @@ function M.run_queries()
                 M.load_query(language, locals['path']),
                 language
             )
-            if windows.current_panel then
-                context.show_context()
-            end
+            windows.panel_append_data({
+                " >>> Imports :: Modules <<<",
+            })
+            context.show_context()
         end
+
+        windows.panel_append_data({
+            "", " >>> Loading / Run Queries <<<", ""
+        })
 
         -- Run language queries
         for name, query_data in pairs(language_queries) do
@@ -112,12 +127,15 @@ function M.run_queries()
                 ::continue::
             end
             local query = M.load_query(language, query_data['path'])
-            -- print("Query Name :: " .. name)
+
+            windows.panel_append_data({
+                " - " .. name
+            })
 
             -- https://neovim.io/doc/user/treesitter.html#Query%3Aiter_captures()
             for id, node, _ in query:iter_captures(root, bufnr, 0, -1) do
-                local name = query.captures[id]
-                if name == "result" then
+                local node_name = query.captures[id]
+                if node_name == "result" then
                     local pos = { node:range() }
                     alerts.create_alert(
                         bufnr, ns, pos,
@@ -137,6 +155,23 @@ function M.run_queries()
     end
 end
 
+-- Get Language or mapping of the current language 
+---@return string
+function M.get_language()
+    local language = ts_parsers.get_buf_lang()
+    local language_map = config.config.language_mappings[language]
+    return language_map or language
+end
+
+--- Get current language query set
+---@return table
+function M.get_language_queries()
+    local language = M.get_language()
+    return config.queries[language]
+end
+
+--- Show queries
+---@param persistent boolean
 function M.show_queries(persistent)
     persistent = persistent or false
     local language = ts_parsers.get_buf_lang()
@@ -150,10 +185,10 @@ function M.show_queries(persistent)
             items[#items+1] = full_name
         end
 
-        if not windows.current_panel then
+        if not windows.panel then
             windows.create_panel("Show Queries", items, {persistent = persistent})
         else
-            windows.set_panel_data(items)
+            windows.panel_append_data(items)
         end
     end
 end

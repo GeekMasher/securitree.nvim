@@ -2,11 +2,13 @@
 -- https://github.com/nvim-lua/popup.nvim
 local Popup = require("nui.popup")
 local autocmd = require("nui.utils.autocmd")
+local utils   = require("securitree.utils")
 local event = autocmd.event
 
 
 local M = {}
-M.current_panel = nil
+M.panel = nil
+M.panel_data = {}
 
 ---comment
 ---@param name string
@@ -55,18 +57,35 @@ function M.create_panel(name, data, opts)
 
         panel:mount()
 
-        M.current_panel = panel
+        M.panel = panel
     end
 
-    M.set_panel_data(data)
+    M.panel_set_data(data)
 end
 
-function M.set_panel_data(data)
-    if M.current_panel and data ~= nil then
-        vim.api.nvim_buf_set_lines(M.current_panel.bufnr, 0, -1, true, data)
+
+function M.clear_panel()
+    if M.panel then
+        vim.api.nvim_buf_set_lines(M.panel.bufnr, 0, -1, true, {})
     end
 end
 
+--- Set and overwrite panel data (if panel is present)
+---@param data table
+function M.panel_set_data(data)
+    if M.panel and data ~= nil then
+        vim.api.nvim_buf_set_lines(M.panel.bufnr, 0, -1, true, data)
+    end
+end
+
+--- Append panel data (if panel is present)
+---@param data table
+function M.panel_append_data(data)
+    -- M.panel_data = utils.table_extend(M.panel_data, data)
+    if M.panel and data ~= nil then
+        vim.api.nvim_buf_set_lines(M.panel.bufnr, -1, -1, true, data)
+    end
+end
 
 return M
 --
