@@ -8,12 +8,21 @@
   )
 )
 
-;; import { X } from 'abc'
+;; Import Statements
 (import_statement
   (import_clause
-    (named_imports 
-      (import_specifier (identifier) @import)
-    )
+    [
+      ;; import x from 'y';
+      (identifier) @import
+      ;; import * as x from 'y';
+      (namespace_import 
+        (identifier) @import
+      )
+      ;; import { x } from 'y'
+      (named_imports 
+        (import_specifier (identifier) @import)
+      )
+    ]
   )
   source: (string (string_fragment) @module)
 )
