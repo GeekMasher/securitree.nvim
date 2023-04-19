@@ -39,6 +39,8 @@ function M.create_context(bufnr, root, locals_query, language)
             queue = queue + 1
         elseif node_type == "import" then
             local text = vim.treesitter.get_node_text(node, bufnr)
+            text = text:gsub("\"", ""):gsub("'", "")
+
             current_locals[text] = current
 
             if queue == 0 then
@@ -59,7 +61,12 @@ function M.show_context(persistent)
     local items = {}
 
     for name, namespace in pairs(config.context) do
-        local full_name = '  - ' .. name .. " <= " .. namespace
+        local full_name = ""
+        if namespace == "" then
+            full_name = '  - ' .. name
+        else
+            full_name = '  - ' .. name .. " <= " .. namespace
+        end
         items[#items+1] = full_name
     end
 
