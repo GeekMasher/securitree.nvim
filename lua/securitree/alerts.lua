@@ -1,6 +1,7 @@
 
 local utils = require("securitree.utils")
 local config = require("securitree.config")
+local windows = require("securitree.windows")
 
 local M = {}
 
@@ -43,6 +44,7 @@ function M.create_alert(bufnr, ns, position, opts)
         col = start_col,
         end_col = end_col,
         severity = utils.severity_to_diagnostic(opts.severity),
+        query = opts.query,
         message = opts.message,
         source = "securitree",
         user_data = opts.content,
@@ -61,6 +63,44 @@ function M.create_alert(bufnr, ns, position, opts)
             virt_text = { { config.config.signs.alert } }
         }
     )
+end
+
+function M.add_assert(bufnr, node, position, opts)
+    local text = vim.treesitter.get_node_text(node, bufnr)
+    config.asserts[#config.asserts+1] = {
+        position = position,
+        text = text
+    }
+end
+
+function M.check_assert()
+    local placeholder = "#"
+    windows.panel_append_data({
+        "", " >>> Assertions <<<", ""
+    })
+
+    for index, assertion in pairs(config.asserts) do
+        local found = false
+        local assertion_text = string.match(assertion.text, "^.*: (.*)")
+
+        local assert_line = assertion_text .. placeholder .. assertion.position[1]
+        local assert_line_before = assertion_text .. placeholder .. assertion.position[1] - 1
+
+        for _, alert in pairs(config.alerts) do
+            local alert_name = alert.query:gsub(".scm", "")
+            local alert_line = alert_name .. placeholder .. alert.lnum
+
+            if alert_line == assert_line or alert_line == assert_line_before then
+                windows.panel_append_data({ "  - [X] " .. assert_line })
+                found = true
+                break
+            end
+        end
+
+        if not found then
+            windows.panel_append_data({ "  - [ ] " .. assert_line })
+        end
+    end
 end
 
 return M

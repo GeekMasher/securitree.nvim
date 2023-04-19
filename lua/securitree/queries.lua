@@ -91,16 +91,18 @@ function M.run_queries()
         windows.clear_panel()
     end
 
-    windows.panel_append_data({
-        "Loading Language :: " .. language, ""
-    })
-
     -- we check to make sure we have at least one query for the loaded language
     if language_queries ~= nil then
         local bufnr = vim.api.nvim_get_current_buf()
         local root = ts_parsers.get_tree_root()
 
+        windows.panel_open()
+        windows.panel_append_data({
+            "Loading Language :: " .. language, ""
+        })
+
         alerts.clear_alerts(bufnr, ns)
+        config.asserts = {} -- reset asserts
 
         -- Generate context for file using `locals` query
         local locals = language_queries['locals.scm']
@@ -143,15 +145,26 @@ function M.run_queries()
                             start_line = pos[1],
                             start_col = pos[2],
                             message = query_data['name'],
+                            query = name,
                             severity = query_data['severity']
                         }
                     )
+                elseif node_name == "assert" then
+                    alerts.add_assert(bufnr, node, { node:range() }, {})
                 end
             end
         end
 
         -- https://neovim.io/doc/user/diagnostic.html#vim.diagnostic.set()
         vim.diagnostic.set(ns, bufnr, config.alerts)
+
+        -- Assert
+        if config.config.features.assertions then
+            alerts.check_assert()
+        end
+    else
+        -- TODO notify the users? 
+        windows.panel_close()
     end
 end
 

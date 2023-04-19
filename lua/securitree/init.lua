@@ -19,6 +19,10 @@ function M.setup(opts)
             { "Welcome to SecuriTree!", "" },
             { persistent = true }
         )
+    else
+        windows.create_panel(
+            "SecuriTree", { "Welcome to SecuriTree!", "" }, {}
+        )
     end
 
     -- Get list of defaults + provided paths
@@ -34,8 +38,9 @@ function M.setup(opts)
         vim.api.nvim_create_autocmd({"BufWritePre", "BufEnter"}, {
             group = group,
             callback = function ()
-                config.enabled = true
-                queries.run_queries()
+                if config.enabled then
+                    queries.run_queries()
+                end
             end
         })
     end

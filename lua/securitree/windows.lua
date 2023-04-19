@@ -1,5 +1,5 @@
 
--- https://github.com/nvim-lua/popup.nvim
+-- https://github.com/MunifTanjim/nui.nvim
 local Popup = require("nui.popup")
 local autocmd = require("nui.utils.autocmd")
 local utils   = require("securitree.utils")
@@ -19,7 +19,7 @@ function M.create_panel(name, data, opts)
     opts = opts or {}
     local current_bufnr = vim.api.nvim_get_current_buf()
 
-    if M.current_panel == nil then
+    if M.panel == nil then
         local panel = Popup({
             enter = false,
             focusable = false,
@@ -55,17 +55,26 @@ function M.create_panel(name, data, opts)
             end, { once = true })
         end
 
-        panel:mount()
-
         M.panel = panel
     end
 
     M.panel_set_data(data)
 end
 
+function M.panel_open()
+    if M.panel then
+        M.panel:mount()
+    end
+end
+
+function M.panel_close()
+    if M.panel then
+        M.panel:unmount()
+    end
+end
 
 function M.clear_panel()
-    if M.panel then
+    if M.panel and M.panel.bufnr then
         vim.api.nvim_buf_set_lines(M.panel.bufnr, 0, -1, true, {})
     end
 end

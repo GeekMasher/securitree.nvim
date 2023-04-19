@@ -1,5 +1,7 @@
 ;; https://github.com/nvim-treesitter/nvim-treesitter/blob/master/queries/python/locals.scm
 
+((comment) @assert (#match? @assert "^# (sec): [a-zA-Z0-9]+"))
+
 (import_statement 
   (dotted_name
     (identifier) @import

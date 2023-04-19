@@ -4,6 +4,7 @@ local M = {}
 M.enabled = true
 M.alerts = {}
 M.alerts_lines = {}
+M.asserts = {}
 M.config = {}
 M.queries = {}
 M.context = {}
@@ -16,6 +17,9 @@ function M.setup(opts)
         autocmd = true,
         autopanel = false,
         debug = false,
+        features = {
+            assertions = false
+        },
         -- Default locations to load queris
         paths_default = {
             -- Home dir
